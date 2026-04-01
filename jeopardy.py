@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import time
 
-# --- 1. Custom CSS for Uniform "Blue Graph" TV Look ---
+# --- 1. Custom CSS ---
 st.markdown("""
 <style>
     .stApp { background-color: #000033; }
@@ -23,55 +23,43 @@ st.markdown("""
         background-color: #060ce9 !important;
         color: #FFCC00 !important;
         border: 3px solid #FFCC00 !important;
-        height: 80px !important; /* Slightly shorter to fit 7 rows on screen */
+        height: 80px !important;
         width: 100% !important;
         font-size: 24px !important;
         font-weight: bold !important;
         border-radius: 5px !important;
     }
-    .stButton > button:hover {
-        border-color: #FFFFFF !important;
-        color: #FFFFFF !important;
-    }
-    .stButton > button:disabled {
-        background-color: #000022 !important;
-        color: #444444 !important;
-        border: 2px solid #222222 !important;
-    }
+    .stButton > button:hover { border-color: #FFFFFF !important; color: #FFFFFF !important; }
+    .stButton > button:disabled { background-color: #000022 !important; color: #444444 !important; border: 2px solid #222222 !important; }
     .stTabs [data-baseweb="tab-list"] { background-color: #060ce9; padding: 10px; }
     .stTabs [data-baseweb="tab"] { color: white !important; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 2. Load Data from Music Manuscript ---
+# --- 2. Load Music Data ---
 @st.cache_data
 def load_data():
     return pd.DataFrame([
-        # Theory
         {"Category": "Theory", "Points": 100, "Question": "A note that represents 1/4 of a beat.", "Answer": "What is a quarter note?"},
         {"Category": "Theory", "Points": 200, "Question": "A mark that means to gradually play louder.", "Answer": "What is a crescendo?"},
         {"Category": "Theory", "Points": 300, "Question": "The right hand symbol.", "Answer": "What is the treble clef?"},
         {"Category": "Theory", "Points": 400, "Question": "Playing rapidly between 2 notes.", "Answer": "What is a trill?"},
         {"Category": "Theory", "Points": 500, "Question": "The finale of a piece in the classical era.", "Answer": "What is a coda?"},
-        # Composer
         {"Category": "Composer", "Points": 100, "Question": "This person composed their first piece at 5.", "Answer": "Who is Mozart?"},
         {"Category": "Composer", "Points": 200, "Question": "The most famous Polish Composer.", "Answer": "Who is Chopin?"},
         {"Category": "Composer", "Points": 300, "Question": "Credited with being Chopin's most famous rival.", "Answer": "Who is Liszt?"},
         {"Category": "Composer", "Points": 400, "Question": "This person is known as the father of music.", "Answer": "Who is Bach?"},
         {"Category": "Composer", "Points": 500, "Question": "This person taught Mozart the most.", "Answer": "Who is Leopold Mozart?"},
-        # Famous Pieces
-        {"Category": "Famous Pieces", "Points": 100, "Question": "Name the Piece (Visual/Audio cue)", "Answer": "Fur Elise - Beethoven"},
-        {"Category": "Famous Pieces", "Points": 200, "Question": "Name the Piece (Visual/Audio cue)", "Answer": "Imperial March - John Williams"},
-        {"Category": "Famous Pieces", "Points": 300, "Question": "Name the Piece (Visual/Audio cue)", "Answer": "Swan Lake - Tchaikovsky"},
-        {"Category": "Famous Pieces", "Points": 400, "Question": "Name the Piece (Visual/Audio cue)", "Answer": "Claire de Lune - Debussy"},
-        {"Category": "Famous Pieces", "Points": 500, "Question": "Name the Piece (Visual/Audio cue)", "Answer": "The British Grenadiers"},
-        # Instruments
+        {"Category": "Famous Pieces", "Points": 100, "Question": "Name the Piece", "Answer": "Fur Elise - Beethoven"},
+        {"Category": "Famous Pieces", "Points": 200, "Question": "Name the Piece", "Answer": "Imperial March - John Williams"},
+        {"Category": "Famous Pieces", "Points": 300, "Question": "Name the Piece", "Answer": "Swan Lake - Tchaikovsky"},
+        {"Category": "Famous Pieces", "Points": 400, "Question": "Name the Piece", "Answer": "Claire de Lune - Debussy"},
+        {"Category": "Famous Pieces", "Points": 500, "Question": "Name the Piece", "Answer": "The British Grenadiers"},
         {"Category": "Instruments", "Points": 100, "Question": "This instrument features 88 black and white keys.", "Answer": "What is a Piano?"},
         {"Category": "Instruments", "Points": 200, "Question": "This single-reed woodwind instrument is typically made of brass and is heavily featured in jazz.", "Answer": "What is a Saxophone?"},
         {"Category": "Instruments", "Points": 300, "Question": "This instrument is the smallest and highest-pitched member of the string family.", "Answer": "What is a Violin?"},
         {"Category": "Instruments", "Points": 400, "Question": "This stringed instrument provides the low-end frequencies in a band.", "Answer": "What is a bass?"},
         {"Category": "Instruments", "Points": 500, "Question": "This electronic musical instrument generates audio signals that can imitate other instruments.", "Answer": "What is a synth?"},
-        # Play by Ear (Added 600 and 700)
         {"Category": "Play by Ear", "Points": 100, "Question": "What is the name of the song?", "Answer": "Last Carnival - Acoustic Cafe"},
         {"Category": "Play by Ear", "Points": 200, "Question": "What is the name of the song?", "Answer": "In the Hall of the Mountain King - Grieg"},
         {"Category": "Play by Ear", "Points": 300, "Question": "What is the name of the song?", "Answer": "Ballade No. 2 Coda - Chopin"},
@@ -92,12 +80,15 @@ if "players" not in st.session_state:
         "final_q_revealed": False, "final_a_revealed": False, "winner": None
     })
 
-# --- 4. Sidebar ---
+# --- 4. Sidebar (Add Players First!) ---
 with st.sidebar:
     st.title("Host Admin")
-    new_p = st.text_input("Player Name")
+    st.write("⚠️ Add players here before starting!")
+    new_p = st.text_input("Player Name", key="add_p_input")
     if st.button("Add Player") and new_p:
         st.session_state.players[new_p] = 0
+        st.success(f"Added {new_p}")
+        time.sleep(0.5)
         st.rerun()
     st.divider()
     if not st.session_state.final_triggered:
@@ -107,8 +98,6 @@ with st.sidebar:
     else:
         if st.button("↩️ BOARD"):
             st.session_state.final_triggered = False
-            st.session_state.final_q_revealed = False
-            st.session_state.final_a_revealed = False
             st.rerun()
     if st.button("Reset All"):
         st.session_state.clear()
@@ -128,20 +117,16 @@ with tab1:
     elif st.session_state.final_triggered:
         st.title("🏆 FINAL JEOPARDY")
         st.markdown("### Category: Music History")
-        
         if not st.session_state.final_q_revealed:
             if st.button("REVEAL FINAL QUESTION", use_container_width=True):
                 st.session_state.final_q_revealed = True
                 st.rerun()
-        
         if st.session_state.final_q_revealed:
             st.warning("### Name the 4 Time Periods of Music.")
-            
             if not st.session_state.final_a_revealed:
                 if st.button("REVEAL FINAL ANSWER"):
                     st.session_state.final_a_revealed = True
                     st.rerun()
-            
             if st.session_state.final_a_revealed:
                 st.success("### Answer: Baroque, Classical, Romantic, Modern")
                 st.balloons()
@@ -173,21 +158,28 @@ with tab1:
             st.success(f"### {q['Answer']}")
             st.write("---")
             st.write("### Assign Points")
-            p_cols = st.columns(max(len(st.session_state.players), 1))
-            for i, name in enumerate(st.session_state.players):
-                col_correct, col_wrong = p_cols[i].columns(2)
-                if col_correct.button("✅", key=f"c_{name}"):
-                    st.session_state.players[name] += q['Points']
-                    st.balloons()
-                    time.sleep(1) 
-                    st.session_state.answered.append(f"{q['Category']}-{q['Points']}")
-                    st.session_state.current_q, st.session_state.show_answer = None, False
-                    st.rerun()
-                if col_wrong.button("❌", key=f"w_{name}"):
-                    st.session_state.players[name] -= q['Points']
-                    st.snow()
-                    time.sleep(1)
-                    st.rerun()
+            
+            # --- FIX: Check if players exist before trying to show buttons ---
+            if not st.session_state.players:
+                st.error("No players found! Please add players in the sidebar to award points.")
+            else:
+                p_names = list(st.session_state.players.keys())
+                p_cols = st.columns(len(p_names))
+                for i, name in enumerate(p_names):
+                    col_correct, col_wrong = p_cols[i].columns(2)
+                    if col_correct.button("✅", key=f"c_{name}"):
+                        st.session_state.players[name] += q['Points']
+                        st.balloons()
+                        time.sleep(1) 
+                        st.session_state.answered.append(f"{q['Category']}-{q['Points']}")
+                        st.session_state.current_q, st.session_state.show_answer = None, False
+                        st.rerun()
+                    if col_wrong.button("❌", key=f"w_{name}"):
+                        st.session_state.players[name] -= q['Points']
+                        st.snow()
+                        time.sleep(1)
+                        st.rerun()
+            
             if st.button("Skip Question"):
                 st.session_state.answered.append(f"{q['Category']}-{q['Points']}")
                 st.session_state.current_q, st.session_state.show_answer = None, False
